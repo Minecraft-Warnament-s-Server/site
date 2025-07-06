@@ -144,7 +144,27 @@ async function loadCountries() {
             `;
             listDiv.appendChild(countryDiv);
         });
+        // Пост-редактор (модальное окно)
+        if (!document.getElementById('posts-modal')) {
+            const modal = document.createElement('div');
+            modal.id = 'posts-modal';
+            modal.style.display = 'none';
+            modal.style.position = 'fixed';
+            modal.style.left = '0';
+            modal.style.top = '0';
+            modal.style.width = '100vw';
+            modal.style.height = '100vh';
+            modal.style.background = 'rgba(0,0,0,0.7)';
+            modal.style.zIndex = '9999';
+            modal.innerHTML = `<div id="posts-modal-content" style="background:#23272e;max-width:600px;margin:60px auto;padding:24px 24px 18px 24px;border-radius:10px;position:relative;color:#fff;"></div>`;
+            document.body.appendChild(modal);
+        }
         listDiv.addEventListener('click', async (e) => {
+            if (e.target.dataset.action === 'edit-posts') {
+                const countryId = e.target.dataset.id;
+                await openPostsEditor(countryId);
+                return;
+            }
             if (e.target.dataset.action === 'save-country') {
                 const id = e.target.dataset.id;
                 const block = e.target.closest('.country-edit-block');
@@ -183,9 +203,119 @@ async function loadCountries() {
             if (e.target.dataset.action === 'change-flag') {
                 alert('Для смены флага загрузите новый файл в /countries/' + e.target.dataset.id + '/flag.расширение через GitHub.');
             }
-            if (e.target.dataset.action === 'edit-posts') {
-                alert('Редактор постов будет реализован позже.');
+            // ...existing code...
+// --- Posts editor ---
+async function openPostsEditor(countryId) {
+    const modal = document.getElementById('posts-modal');
+    const content = document.getElementById('posts-modal-content');
+    modal.style.display = 'block';
+    content.innerHTML = '<div>Загрузка постов...</div>';
+    // Загрузка posts.json
+    let posts = [];
+    let sha = null;
+    try {
+        const res = await fetch(`${apiBase}countries/${countryId}/posts.json`, {
+            headers: { Authorization: `token ${githubToken}` }
+        });
+        if (!res.ok) throw new Error('Нет posts.json или ошибка доступа');
+        const data = await res.json();
+        if (data.encoding === 'base64') {
+            const binary = atob(data.content.replace(/\n/g, ''));
+            const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+            const text = new TextDecoder('utf-8').decode(bytes);
+            posts = JSON.parse(text);
+            sha = data.sha;
+        }
+    } catch (e) {
+        posts = [];
+    }
+    // Рендер
+    content.innerHTML = `
+        <h3>Посты страны: ${countryId}</h3>
+        <button id="close-posts-modal" style="position:absolute;top:10px;right:18px;font-size:1.5em;background:none;border:none;color:#fff;cursor:pointer;">×</button>
+        <form id="posts-form">
+            <div id="posts-list" style="max-height:60vh;overflow-y:auto;overflow-x:hidden;padding-right:8px;">
+                ${Array.isArray(posts) ? posts.map((post, i) => `
+                    <div class="post-edit-block" style="background:#181a20;padding:12px 12px 8px 12px;border-radius:8px;margin-bottom:12px;">
+                        <label>Заголовок: <input type="text" name="title_${i}" value="${post.title||''}" style="width:90%"></label><br>
+                        <label>Дата: <input type="text" name="date_${i}" value="${post.date||''}" style="width:60%"></label><br>
+                        <label>Текст:<br><textarea name="body_${i}" style="width:100%;min-height:60px;">${post.body||''}</textarea></label><br>
+                        <button type="button" class="remove-post-btn" data-index="${i}">Удалить</button>
+                    </div>
+                `).join('') : ''}
+            </div>
+            <button type="button" id="add-post-btn">Добавить пост</button>
+            <button type="submit" style="margin-left:18px;">Сохранить</button>
+            <div id="posts-save-status" style="margin-top:10px;"></div>
+        </form>
+    `;
+    // Закрытие
+    document.getElementById('close-posts-modal').onclick = () => { modal.style.display = 'none'; };
+    // Добавить пост
+    document.getElementById('add-post-btn').onclick = (e) => {
+        e.preventDefault();
+        posts.unshift({ title: '', date: '', body: '' });
+        openPostsEditor(countryId);
+    };
+    // Удалить пост
+    content.querySelectorAll('.remove-post-btn').forEach(btn => {
+        btn.onclick = () => {
+            const idx = Number(btn.dataset.index);
+            posts.splice(idx, 1);
+            openPostsEditor(countryId);
+        };
+    });
+    // Сохранить
+    document.getElementById('posts-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const form = e.target;
+        const newPosts = [];
+        for (let i = 0; i < posts.length; ++i) {
+            newPosts.push({
+                title: form[`title_${i}`].value,
+                date: form[`date_${i}`].value,
+                body: form[`body_${i}`].value
+            });
+        }
+        // Сохраняем на github
+        try {
+            // Получить SHA если не был получен
+            let newSha = sha;
+            if (!newSha) {
+                // Попробовать получить sha (если файл только что создан)
+                const res = await fetch(`${apiBase}countries/${countryId}/posts.json`, {
+                    headers: { Authorization: `token ${githubToken}` }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    newSha = data.sha;
+                }
             }
+            // Кодируем
+            const utf8 = new TextEncoder().encode(JSON.stringify(newPosts, null, 2));
+            let binary = '';
+            utf8.forEach(b => binary += String.fromCharCode(b));
+            const content = btoa(binary);
+            const body = {
+                message: `Edit posts for ${countryId}`,
+                content,
+                sha: newSha || undefined
+            };
+            const putRes = await fetch(`${apiBase}countries/${countryId}/posts.json`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `token ${githubToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+            if (!putRes.ok) throw new Error('Ошибка сохранения');
+            document.getElementById('posts-save-status').innerText = 'Сохранено!';
+        } catch (err) {
+            document.getElementById('posts-save-status').innerText = 'Ошибка: ' + err.message;
+        }
+    };
+}
         });
     } catch (err) {
         listDiv.innerHTML = '<span style="color:red">Ошибка загрузки: ' + err.message + '</span>';
