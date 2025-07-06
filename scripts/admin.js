@@ -105,6 +105,28 @@ async function loadCountries() {
     try {
         const countries = await githubGetJson('countries.json');
         listDiv.innerHTML = '';
+        // Кнопка добавления страны
+        const addBtn = document.createElement('button');
+        addBtn.textContent = 'Добавить страну';
+        addBtn.className = 'admin-add-btn';
+        addBtn.onclick = async () => {
+            const newId = prompt('Введите ID новой страны (латиницей, без пробелов):');
+            if (!newId || countries[newId]) {
+                alert('Некорректный или уже существующий ID!');
+                return;
+            }
+            countries[newId] = {
+                name: '',
+                description: '',
+                flagext: 'svg',
+                members: {},
+                diplomacy: {},
+                hidenBonus: 0
+            };
+            await githubPutJson('countries.json', countries, `Add country ${newId}`);
+            await loadCountries();
+        };
+        listDiv.appendChild(addBtn);
         Object.entries(countries).forEach(([id, country]) => {
             const countryDiv = document.createElement('div');
             countryDiv.className = 'country-edit-block';
@@ -176,6 +198,25 @@ async function loadUsers() {
     try {
         const users = await githubGetJson('users.json');
         listDiv.innerHTML = '';
+        // Кнопка добавления игрока
+        const addBtn = document.createElement('button');
+        addBtn.textContent = 'Добавить игрока';
+        addBtn.className = 'admin-add-btn';
+        addBtn.onclick = async () => {
+            const newId = prompt('Введите ID нового игрока (латиницей, без пробелов):');
+            if (!newId || users[newId]) {
+                alert('Некорректный или уже существующий ID!');
+                return;
+            }
+            users[newId] = {
+                discord: '',
+                name: '',
+                shortName: ''
+            };
+            await githubPutJson('users.json', users, `Add user ${newId}`);
+            await loadUsers();
+        };
+        listDiv.appendChild(addBtn);
         Object.entries(users).forEach(([id, user]) => {
             const userDiv = document.createElement('div');
             userDiv.className = 'user-edit-block';
