@@ -239,6 +239,13 @@ async function openPostsEditor(countryId) {
                     <div class="post-edit-block" style="background:#181a20;padding:12px 12px 8px 12px;border-radius:8px;margin-bottom:12px;">
                         <label>Заголовок: <input type="text" name="title_${i}" value="${post.title||''}" style="width:90%"></label><br>
                         <label>Дата: <input type="text" name="date_${i}" value="${post.date||''}" style="width:60%"></label><br>
+                        <label>URL изображения: <input type="text" name="image_${i}" value="${post.image||''}" style="width:90%" placeholder="https://..." /></label><br>
+                        <label>Положение изображения:
+                            <select name="imagePos_${i}">
+                                <option value="top" ${post.imagePos==="top"?"selected":""}>Выше текста</option>
+                                <option value="bottom" ${post.imagePos==="bottom"?"selected":""}>Ниже текста</option>
+                            </select>
+                        </label><br>
                         <label>Текст:<br><textarea name="body_${i}" style="width:100%;min-height:60px;">${post.body||''}</textarea></label><br>
                         <button type="button" class="remove-post-btn" data-index="${i}">Удалить</button>
                     </div>
@@ -254,7 +261,7 @@ async function openPostsEditor(countryId) {
     // Добавить пост
     document.getElementById('add-post-btn').onclick = (e) => {
         e.preventDefault();
-        posts.unshift({ title: '', date: '', body: '' });
+        posts.unshift({ title: '', date: '', body: '', image: '', imagePos: 'top' });
         openPostsEditor(countryId);
     };
     // Удалить пост
@@ -274,7 +281,9 @@ async function openPostsEditor(countryId) {
             newPosts.push({
                 title: form[`title_${i}`].value,
                 date: form[`date_${i}`].value,
-                body: form[`body_${i}`].value
+                body: form[`body_${i}`].value,
+                image: form[`image_${i}`].value,
+                imagePos: form[`imagePos_${i}`].value
             });
         }
         // Сохраняем на github

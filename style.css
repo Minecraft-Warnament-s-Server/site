@@ -140,17 +140,22 @@
 .posts-section {
   margin-top: 32px;
 }
-.posts-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+.posts-grid, .postsfeed-grid {
+  column-count: 2;
+  column-gap: 16px;
+}
+
+.post-tile {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 16px;
 }
 .post-tile {
   background: #232323;
   border-radius: 8px;
   padding: 12px;
   /*width: 300px;*/
-  width: 49%;
+  /*width: 49%;*/
   box-sizing: border-box;
   color: #fff;
   display: flex;

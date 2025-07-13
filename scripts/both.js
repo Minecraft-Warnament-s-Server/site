@@ -102,11 +102,28 @@ function renderPostsGrid(posts) {
     if (!Array.isArray(posts) || posts.length === 0) {
         return '<p>No posts found.</p>';
     }
-    return posts.map(post =>
-        `<div class="post-tile">
+    // Сортировка: сверху самые новые (по дате, если есть)
+    const sorted = [...posts].sort((a, b) => {
+        // Если нет даты, считаем пост "старым"
+        if (!a.date && !b.date) return 0;
+        if (!a.date) return 1;
+        if (!b.date) return -1;
+        // YYYY-MM-DD или ISO
+        return new Date(b.date) - new Date(a.date);
+    });
+    return sorted.map(post => {
+        let imageHtml = '';
+        if (post.image) {
+            imageHtml = `<img src="${post.image}" alt="post image" style="max-width:100%;max-height:220px;border-radius:8px;margin:8px 0;">`;
+        }
+        let bodyHtml = `<div class="post-body">${post.body ? post.body : ''}</div>`;
+        let imagePos = post.imagePos === 'bottom' ? 'bottom' : 'top';
+        return `<div class="post-tile">
             <div class="post-title">${post.title ? post.title : ''}</div>
-            <div class="post-body">${post.body ? post.body : ''}</div>
             <div class="post-date">${post.date ? post.date : ''}</div>
-        </div>`
-    ).join('');
+            ${imagePos === 'top' ? imageHtml : ''}
+            ${bodyHtml}
+            ${imagePos === 'bottom' ? imageHtml : ''}
+        </div>`;
+    }).join('');
 }
