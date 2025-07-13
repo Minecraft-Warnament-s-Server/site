@@ -1,30 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Warnament's Minecraft</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="scripts/both.js" defer></script>
-    <script src="scripts/admin.js" defer></script>
-</head>
-<body>
-    <nav class="nav-header">
-        <div class="nav-pages">
-            <div class="naw-page"><a class="naw-page-text" href="index.html">Home</a></div>
-            <div class="naw-page"><a class="naw-page-text" href="https://warnament.space:8123/">Live Map</a></div>
-            <div class="naw-page"><a class="naw-page-text" href="admin.html">Admin panel</a></div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Panel - Warnament's Minecraft</title>
+        <link rel="stylesheet" href="style.css">
+        <script src="scripts/both.js" defer></script>
+        <script src="scripts/admin.js" defer></script>
+    </head>
+    <body>
+        <nav class="nav-header">
+            <div class="nav-pages">
+                <div class="naw-page"><a clas="naw-page-text" href="index.html">Home</a></div>
+                <div class="naw-page"><a clas="naw-page-text" href="https://warnament.space:8123/">Live Map</a></div>
+                <div class="naw-page"><a clas="naw-page-text" href="admin.html">Admin panel</a></div>
+                <div class="naw-page"><a clas="naw-page-text" href="postsfeed.html">Postsfeed</a></div>
+            </div>
+            <div class="naw-page"><a clas="naw-page-text" onclick="convertDecreeToHtmlStringFromClipboard()">Convert post</a></div>
+        </nav>
+        <div class="page-content">
+            <div id="auth-block">
+                <label for="github-token"><b>GitHub Token</b> (только для администраторов):</label><br>
+                <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="width:350px;" name="tocken" autocomplete="tocken">
+                <button id="login-btn">Войти</button>
+                <div id="auth-error" style="color:red; margin-top:8px; display:none;"></div>
+            </div>
+            <div id="admin-panel" style="display:none;"></div>
         </div>
-        <div class="naw-page"><a class="naw-page-text" onclick="convertDecreeToHtmlStringFromClipboard()">Convert post</a></div>
-    </nav>
-    <div class="page-content">
-        <div id="auth-block">
-            <label for="github-token"><b>GitHub Token</b> (только для администраторов):</label><br>
-            <input type="password" id="github-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" style="width:350px;">
-            <button id="login-btn">Войти</button>
-            <div id="auth-error" style="color:red; margin-top:8px; display:none;"></div>
-        </div>
-        <div id="admin-panel" style="display:none;"></div>
-    </div>
-</body>
+    </body>
 </html>
